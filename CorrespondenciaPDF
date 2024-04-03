@@ -1,0 +1,67 @@
+/**
+ * Crea un menú personalizado en la hoja de cálculo
+ */
+function onOpen() {
+  const ui = SpreadsheetApp.getUi();
+  ui.createMenu('Combinar Correspondencia')
+    .addItem('Generar PDFs', 'combinarCorrespondencia')
+    .addToUi();
+}
+
+/**
+ * Función principal para combinar correspondencia
+ */
+function combinarCorrespondencia() {
+  // Obtener la hoja de cálculo actual
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+  // Obtener los datos de la hoja de cálculo
+  const datos = sheet.getDataRange().getValues();
+
+  // Obtener la plantilla de Word
+  const plantillaId = '11GanAfsWq8wK2WF4MJyvqm_qI2h0ZkpQB7b_UAp95F4'; // Reemplaza con el ID de tu plantilla de Word
+  const plantillaOriginal = DriveApp.getFileById(plantillaId);
+
+  // Recorrer los datos y generar PDFs
+  datos.forEach((fila, index) => {
+    if (index > 0) { // Omitir la primera fila (encabezados)
+      const codigo= fila[0];
+      const email = fila[1];
+      const nombre = fila[2];
+      const apellido = fila[3];
+      const ciudad = fila[4];
+      const carrera = fila[5];
+
+      // Crear una copia temporal de la plantilla
+      const copiaTemporal = plantillaOriginal.makeCopy();
+      const documentoId = copiaTemporal.getId();
+      const documento = DocumentApp.openById(documentoId);
+
+      // Reemplazar los campos de combinación de correspondencia
+      const body = documento.getBody();
+      
+      body.replaceText('{{Código}}', codigo);
+      body.replaceText('{{Nombres}}', nombre);
+      body.replaceText('{{Apellidos}}', apellido);
+      body.replaceText('{{Ciudad}}', ciudad);
+      body.replaceText('{{Carrera}}', carrera);
+
+      documento.saveAndClose();
+      // Convertir el documento a PDF
+      const pdf = documento.getAs('application/pdf');
+
+      // Compartir el PDF de forma pública
+      const pdfFile = DriveApp.createFile(pdf).setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      const pdfUrl = pdfFile.getUrl();
+
+      // Enviar el correo electrónico con el PDF adjunto
+      GmailApp.sendEmail(email, 'Prueba de AppScript para Nube con correspondencia combinada', 'Ignorar el correo es una prueba que estoy haciendo para nube :3', {
+        attachments: [pdf.getAs(MimeType.PDF)],
+        name: 'Tu peor pesadilla'
+      });
+
+      // Eliminar la copia temporal
+      DriveApp.getFileById(documentoId).setTrashed(true);
+    }
+  });
+}
