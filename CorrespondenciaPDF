@@ -1,16 +1,5 @@
-/**
- * Crea un menú personalizado en la hoja de cálculo
- */
-function onOpen() {
-  const ui = SpreadsheetApp.getUi();
-  ui.createMenu('Combinar Correspondencia')
-    .addItem('Generar PDFs', 'combinarCorrespondencia')
-    .addToUi();
-}
 
-/**
- * Función principal para combinar correspondencia
- */
+
 function combinarCorrespondencia() {
   // Obtener la hoja de cálculo actual
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
